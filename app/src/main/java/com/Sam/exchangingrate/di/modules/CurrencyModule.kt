@@ -1,9 +1,9 @@
 package com.Sam.exchangingrate.di.modules
 
+import com.Sam.exchangingrate.network.RestApi
 import com.Sam.exchangingrate.presenters.PresenterImpl
 import com.Sam.exchangingrate.repository.CurrencyRepository
 import com.Sam.exchangingrate.utils.BASE_URL
-import com.sam.cars.network.RestApi
 import dagger.Module
 import dagger.Provides
 import dagger.Reusable

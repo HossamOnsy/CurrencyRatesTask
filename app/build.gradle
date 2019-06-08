@@ -35,6 +35,7 @@ buildscript {
     ext.dagger2_version = '2.16'
     ext.androidX_Version = '1.0.0'
     ext.recyclerView_Version = '1.1.0-alpha06'
+    ext.recyclerViewAnimator_Version = '3.0.0'
     ext.lottieVersion = '3.0.0'
     ext.timber_Version = '4.7.1'
     ext.mockitoInline_version = '2.13.0'
@@ -52,7 +53,6 @@ dependencies {
     androidTestImplementation 'androidx.test:runner:1.2.0'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 
-
     // LiveData & ViewModel
     implementation "androidx.lifecycle:lifecycle-extensions:$lifecycle_version"
 
@@ -64,6 +64,8 @@ dependencies {
 
     // RecyclerView
     implementation "androidx.recyclerview:recyclerview:$recyclerView_Version"
+    // RecyclerViewAnimator
+    implementation "jp.wasabeef:recyclerview-animators:$recyclerViewAnimator_Version"
 
     // For Animations and Design
     implementation "com.airbnb.android:lottie:$lottieVersion"

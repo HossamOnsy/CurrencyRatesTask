@@ -1,4 +1,4 @@
-package com.sam.cars.network
+package com.Sam.exchangingrate.network
 
 import com.Sam.exchangingrate.models.CurrencyRatesResponseModel
 import io.reactivex.Observable

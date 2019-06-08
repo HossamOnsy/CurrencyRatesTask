@@ -1,7 +1,7 @@
-package com.sam.cars.di.modules
+package com.Sam.exchangingrate.di.modules
 
+import com.Sam.exchangingrate.network.RestApi
 import com.Sam.exchangingrate.utils.BASE_URL
-import com.sam.cars.network.RestApi
 import dagger.Module
 import dagger.Provides
 import dagger.Reusable

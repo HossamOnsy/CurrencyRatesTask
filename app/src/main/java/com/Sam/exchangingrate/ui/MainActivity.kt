@@ -1,92 +1,96 @@
 package com.Sam.exchangingrate.ui
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
-import androidx.lifecycle.Observer
+import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.Sam.exchangingrate.R
 import com.Sam.exchangingrate.di.component.DaggerActivityComponent
+import com.Sam.exchangingrate.models.CurrencyRatesRecyclerObject
 import com.Sam.exchangingrate.models.CurrencyRatesResponseModel
-import com.Sam.exchangingrate.models.SingletonVariable
-import com.Sam.exchangingrate.models.SingletonVariable.valueEntered
+import com.Sam.exchangingrate.models.ObservableObject.isScrolling
 import com.Sam.exchangingrate.presenters.Presenter
 import com.Sam.exchangingrate.presenters.PresenterImpl
+import jp.wasabeef.recyclerview.animators.SlideInUpAnimator
 import kotlinx.android.synthetic.main.activity_main.*
-import java.util.ArrayList
 import javax.inject.Inject
+import kotlin.collections.ArrayList
 
 
-class MainActivity : AppCompatActivity() , Presenter {
+class MainActivity : AppCompatActivity(), Presenter {
 
-    @Inject lateinit var mainPresenterImpl: PresenterImpl
-    lateinit var currencyRatesAdapter : DataRecyclerAdapter
+    @Inject
+    lateinit var mainPresenterImpl: PresenterImpl
+    lateinit var currencyRatesAdapter: DataRecyclerAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(com.Sam.exchangingrate.R.layout.activity_main)
 
         DaggerActivityComponent.builder().build().inject(this)
 
         recyclerInitation()
+        recyclerScrollListener()
         mainPresenterImpl.mainPresenter = this
         mainPresenterImpl.fetchCurrencyRates(true)
 
-        observeOnValueChange()
     }
-
-    private fun observeOnValueChange() {
-        SingletonVariable.valueEntered.observe(this, Observer { valueEntered ->
-            if(valueEntered!=null){
-                recycler_view.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-
-                    override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-                        super.onScrollStateChanged(recyclerView, newState)
-                        if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-                            currencyRatesAdapter.notifyDataSetChanged()
-                        }
-//                        else if (newState == RecyclerView.SCROLL_STATE_SETTLING) {
-//                        } else if (newState == RecyclerView.SCROLL_STATE_DRAGGING) {
-//                            Log.d("scroll", "dragging")
-//                        }
-                    }
-
-                    override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                        super.onScrolled(recyclerView, dx, dy)
-//                        Log.d("scroll", "scrolling")
-                    }
-                })
+    private fun recyclerScrollListener() {
+        recycler_view.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                super.onScrollStateChanged(recyclerView, newState)
+                if(recycler_view.scrollState == RecyclerView.SCROLL_STATE_IDLE ){
+                        isScrolling = false
+                }else{
+                    isScrolling = true
+                }
             }
 
         })
-
     }
-
-
     private fun recyclerInitation() {
         recycler_view.apply {
             setHasFixedSize(true)
             val viewManager = LinearLayoutManager(this@MainActivity)
-            var arrayList = ArrayList<Pair<String, Double>>()
-            arrayList.add(Pair("EUR",1.0))
+            var arrayList = ArrayList<CurrencyRatesRecyclerObject>()
 
-            // use a linear layout manager
-            layoutManager = viewManager as RecyclerView.LayoutManager?
-            // specify an viewAdapter
-            currencyRatesAdapter = DataRecyclerAdapter(arrayList)
-            adapter = currencyRatesAdapter
-
+            layoutManager = viewManager
+            setUpRecyclerAdapter(arrayList)
         }
     }
 
+    fun setUpRecyclerAdapter(valueList: ArrayList<CurrencyRatesRecyclerObject>) {
+        recycler_view.adapter = null
+        currencyRatesAdapter = DataRecyclerAdapter(this@MainActivity, valueList)
+        recycler_view.setItemAnimator(SlideInUpAnimator())
+        recycler_view.adapter = currencyRatesAdapter
+
+    }
+
+    var arrayList = ArrayList<CurrencyRatesRecyclerObject>()
     override fun dataFetchedSuccessfully(currencyRateResponseModel: CurrencyRatesResponseModel?) {
-        if(currencyRateResponseModel!=null)
-            currencyRatesAdapter.updateList(currencyRateResponseModel.rates!!.toList())
-        else{
-            currencyRatesAdapter.notifyDataSetChanged()
+        if (currencyRateResponseModel != null) {
+
+            arrayList.add(CurrencyRatesRecyclerObject("EUR", "0"))
+            for( i in currencyRateResponseModel.rates!!.toList()){
+                arrayList.add(CurrencyRatesRecyclerObject(i.first, i.second.toString()))
+            }
+
+            currencyRatesAdapter.updateList(arrayList)
+
+        }
+        else {
+            if(recycler_view.scrollState == RecyclerView.SCROLL_STATE_IDLE && DataRecyclerAdapter.textChanged){
+                currencyRatesAdapter.notifyItemRangeChanged(1,arrayList.size)
+            }
+
         }
 
     }
+
+    fun receiveNewList(valueList: ArrayList<CurrencyRatesRecyclerObject>) {
+        setUpRecyclerAdapter(valueList)
+
+    }
+
 
 }

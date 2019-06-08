@@ -18,13 +18,6 @@ class PresenterImpl (var currencyRepository: CurrencyRepository){
 
     lateinit var  mainPresenter: Presenter
     private var subscription: Disposable
-    lateinit var fragmentTransaction: FragmentTransaction
-    var selection = MutableLiveData<String>()
-    var filter = MutableLiveData<Boolean>()
-    var loadMore = MutableLiveData<Boolean>()
-    var manufacturer = Pair<String, String>("", "")
-    var maintype = Pair<String, String>("", "")
-    var build_dates = Pair<String, String>("", "")
     val loadingVisibility: MutableLiveData<Int> = MutableLiveData()
     val errorMessage: MutableLiveData<Int> = MutableLiveData()
 
@@ -36,7 +29,9 @@ class PresenterImpl (var currencyRepository: CurrencyRepository){
     fun fetchCurrencyRates(firstCall: Boolean){
         subscription =
         Observable.interval(1, TimeUnit.SECONDS)
-            .flatMap { currencyRepository.getCurrencyChanges() }
+            .flatMap {
+            currencyRepository.getCurrencyChanges()
+    }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .doOnSubscribe { onRetrieveDataStart() }
@@ -52,11 +47,7 @@ class PresenterImpl (var currencyRepository: CurrencyRepository){
     }
     var i = 0;
 
-    private fun onRetrieveDataSuccess(
-        currencyRateResponseModel: CurrencyRatesResponseModel?,
-        firstCall: Boolean
-    ) {
-
+    private fun onRetrieveDataSuccess(currencyRateResponseModel: CurrencyRatesResponseModel?, firstCall: Boolean) {
 
         if(i==0) {
             i++;
@@ -68,7 +59,6 @@ class PresenterImpl (var currencyRepository: CurrencyRepository){
         if (currencyRateResponseModel != null) {
             currencyRateMapping = currencyRateResponseModel.rates!!
         }
-//        Timber.v("Page Number %s ", currencyRateResponseModel!!.rates!!["AUD"])
     }
 
     private fun onRetrieveDataError(error: Throwable?) {
