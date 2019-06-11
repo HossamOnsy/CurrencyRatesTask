@@ -7,7 +7,6 @@ import retrofit2.http.Query
 
 interface RestApi {
 
-//
     @GET("/latest")
     fun getCurrencyRates(
         @Query("base") currencyName: String
