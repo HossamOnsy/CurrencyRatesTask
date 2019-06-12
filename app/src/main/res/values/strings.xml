@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">ExchangingRate</string>
+    <string name="defaultValueHint">0.0</string>
 </resources>

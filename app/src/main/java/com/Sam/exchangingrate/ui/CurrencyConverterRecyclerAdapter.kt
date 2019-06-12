@@ -9,40 +9,39 @@ import androidx.recyclerview.widget.RecyclerView
 import com.Sam.exchangingrate.models.CurrencyRatesRecyclerObject
 import com.Sam.exchangingrate.utils.AppUtils.getValueAfterConversion
 import com.Sam.exchangingrate.utils.currencyKey
-import kotlinx.android.synthetic.main.data_item.view.*
-import timber.log.Timber
+import kotlinx.android.synthetic.main.currency_item.view.*
 import java.text.DecimalFormat
+import com.Sam.exchangingrate.utils.AppUtils.getFlagOfCurrencyHost
+import com.Sam.exchangingrate.utils.AppUtils.getNameOfCurrency
 
 
 class CurrencyConverterRecyclerAdapter(
-    val activity: MainActivity,
-    var valueList: ArrayList<CurrencyRatesRecyclerObject>,
+    var currenciesList: ArrayList<CurrencyRatesRecyclerObject>,
     var currencyConverterAdapterListener: CurrenyConverterAdapterListener,
-    var initalValueEntered: Double
+    var currentValue: Double
 ) :
-    RecyclerView.Adapter<CurrencyConverterRecyclerAdapter.DataViewHolder>() {
+    RecyclerView.Adapter<CurrencyConverterRecyclerAdapter.CurrencyItemViewHolder>() {
 
     var currencyRateMapping : Map<String, Double>? =null;
 
-    // Create new views (invoked by the layout manager)
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DataViewHolder {
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CurrencyItemViewHolder {
         val cardView =
             LayoutInflater.from(parent.context).inflate(
-                com.Sam.exchangingrate.R.layout.data_item,
+                com.Sam.exchangingrate.R.layout.currency_item,
                 parent,
                 false
             ) as View
 
-        return DataViewHolder(cardView)
+        return CurrencyItemViewHolder(cardView)
     }
 
 
-    // Replace the contents of a view (invoked by the layout manager)
-    override fun onBindViewHolder(holder: DataViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: CurrencyItemViewHolder, position: Int) {
 
         checkEditTextEnablement(position, holder)
         reformatEditText(position, holder)
-        holder.title.text = valueList.get(position).name
+        bindValuesToView(position, holder)
         checkIfFirstResponder(position, holder)
 
         holder.itemView.setOnClickListener {
@@ -51,12 +50,23 @@ class CurrencyConverterRecyclerAdapter(
 
     }
 
-    private fun checkIfFirstResponder(position: Int, holder: DataViewHolder) {
+    private fun bindValuesToView(
+        position: Int,
+        holder: CurrencyItemViewHolder
+    ) {
+
+        holder.title.text = currenciesList.get(position).name
+        holder.flagIconIv.setImageResource(getFlagOfCurrencyHost( currenciesList.get(position).name))
+        holder.currencyDescriptionTv.setText( getNameOfCurrency( currenciesList.get(position).name))
+    }
 
 
+    private fun checkIfFirstResponder(position: Int, holder: CurrencyItemViewHolder) {
+
+        if(position == 0 )
             holder.et_value.addTextChangedListener(object : TextWatcher {
                 override fun afterTextChanged(s: Editable?) {
-                    if (position == 0 && holder.title.text.equals(currencyKey))
+                    if (holder.title.text.equals(currencyKey))
                         currencyConverterAdapterListener.isUpdatingText(false)
                 }
 
@@ -65,7 +75,7 @@ class CurrencyConverterRecyclerAdapter(
 
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                     val tempValue = s.toString()
-                    if (position == 0 && holder.title.text.equals(currencyKey) && tempValue.toDoubleOrNull() != null) {
+                    if ( holder.title.text.equals(currencyKey) && tempValue.toDoubleOrNull() != null) {
 
                         currencyConverterAdapterListener.isUpdatingText(true)
                         var temp = s.toString()
@@ -80,74 +90,79 @@ class CurrencyConverterRecyclerAdapter(
             })
     }
 
-    private fun checkEditTextEnablement(position: Int, holder: DataViewHolder) {
+    private fun checkEditTextEnablement(position: Int, holder: CurrencyItemViewHolder) {
         if (position != 0) {
-            valueList.get(position).value = getValueAfterConversion(initalValueEntered,currencyRateMapping,valueList.get(position).name).toString()
+            currenciesList.get(position).value = getValueAfterConversion(currentValue,currencyRateMapping,currenciesList.get(position).name).toString()
             holder.et_value.isEnabled = false
         } else {
-            valueList.get(position).value = initalValueEntered.toString()
+            currenciesList.get(position).value = currentValue.toString()
             holder.et_value.isEnabled = true
+            holder.et_value.requestFocus()
         }
     }
 
-    private fun reformatEditText(position: Int, holder: DataViewHolder) {
-        if (valueList.get(position).value.equals("") || valueList.get(position).value.equals("0.0")) {
+    private fun reformatEditText(position: Int, holder: CurrencyItemViewHolder) {
+        if (currenciesList.get(position).value.equals("") || currenciesList.get(position).value.equals("0.0")) {
             holder.et_value.setText("")
             holder.et_value.hint = "0"
         } else {
-            val amount = java.lang.Double.parseDouble(valueList.get(position).value)
+            val amount = java.lang.Double.parseDouble(currenciesList.get(position).value)
             val formatter = DecimalFormat("###.00")
             val formatted = formatter.format(amount)
 
             if (position != 0)
                 holder.et_value.setText(formatted)
             else
-                holder.et_value.setText(valueList.get(position).value)
+                holder.et_value.setText(currenciesList.get(position).value)
         }
 
     }
 
-    private fun itemClicked(position: Int, holder: DataViewHolder) {
+
+    private fun itemClicked(position: Int, holder: CurrencyItemViewHolder) {
 
         if (!holder.et_value.text.toString().trim().equals("")) {
             currencyConverterAdapterListener.valueChanged(holder.et_value.text.toString().toDouble())
         }
+        currencyKey = currenciesList.get(position).name
+        currenciesList.add(0, currenciesList.get(position))
+        currenciesList.removeAt(position + 1)
+        notifyItemMoved(position,0)
+        notifyItemChanged(0)
+        notifyItemChanged(1)
 
-        currencyKey = valueList.get(position).name
-        valueList.add(0, valueList.get(position))
-        valueList.removeAt(position + 1)
-
-        activity.receiveNewList(valueList)
-
+        currencyConverterAdapterListener.listAltered()
     }
 
     fun updateList(pairList: ArrayList<CurrencyRatesRecyclerObject>) {
-        this.valueList.addAll(pairList)
+        this.currenciesList.addAll(pairList)
         notifyDataSetChanged()
     }
 
-    class DataViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        var title = itemView.title
+    class CurrencyItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        var title = itemView.title_tv
+        var currencyDescriptionTv  = itemView.currency_desc_tv
         var et_value = itemView.et_value
+        var flagIconIv = itemView.flag_icon
     }
 
     interface CurrenyConverterAdapterListener {
         fun isUpdatingText(textIsChanging: Boolean)
         fun valueChanged(valueEntered: Double)
+        fun listAltered()
     }
 
-    // Return the size of your dataset (invoked by the layout manager)
-    override fun getItemCount() = valueList.size
+
+    override fun getItemCount() = currenciesList.size
 
     fun valueAltered(
         value: Double?,
         arrayList: ArrayList<CurrencyRatesRecyclerObject>
     ) {
         if(value!=null)
-            initalValueEntered = value
+            currentValue = value
         else
-            initalValueEntered = 0.0
-
+            currentValue = 0.0
 
         notifyItemRangeChanged(1,arrayList.size)
     }
@@ -156,4 +171,5 @@ class CurrencyConverterRecyclerAdapter(
     fun currencyLatestDataConversion(it: Map<String, Double>) {
         currencyRateMapping = it
     }
+
 }
