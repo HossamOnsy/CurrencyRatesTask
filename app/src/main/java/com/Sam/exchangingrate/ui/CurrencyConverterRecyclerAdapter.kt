@@ -7,12 +7,12 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.Sam.exchangingrate.models.CurrencyRatesRecyclerObject
+import com.Sam.exchangingrate.utils.AppUtils.getFlagOfCurrencyHost
+import com.Sam.exchangingrate.utils.AppUtils.getNameOfCurrency
 import com.Sam.exchangingrate.utils.AppUtils.getValueAfterConversion
 import com.Sam.exchangingrate.utils.currencyKey
 import kotlinx.android.synthetic.main.currency_item.view.*
 import java.text.DecimalFormat
-import com.Sam.exchangingrate.utils.AppUtils.getFlagOfCurrencyHost
-import com.Sam.exchangingrate.utils.AppUtils.getNameOfCurrency
 
 
 class CurrencyConverterRecyclerAdapter(
@@ -22,7 +22,7 @@ class CurrencyConverterRecyclerAdapter(
 ) :
     RecyclerView.Adapter<CurrencyConverterRecyclerAdapter.CurrencyItemViewHolder>() {
 
-    var currencyRateMapping : Map<String, Double>? =null;
+    var currencyRateMapping: Map<String, Double>? = null
 
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CurrencyItemViewHolder {
@@ -56,18 +56,21 @@ class CurrencyConverterRecyclerAdapter(
     ) {
 
         holder.title.text = currenciesList.get(position).name
-        holder.flagIconIv.setImageResource(getFlagOfCurrencyHost( currenciesList.get(position).name))
-        holder.currencyDescriptionTv.setText( getNameOfCurrency( currenciesList.get(position).name))
+        holder.flagIconIv.setImageResource(getFlagOfCurrencyHost(currenciesList.get(position).name))
+        holder.currencyDescriptionTv.text = getNameOfCurrency(currenciesList.get(position).name)
     }
 
 
     private fun checkIfFirstResponder(position: Int, holder: CurrencyItemViewHolder) {
 
-        if(position == 0 )
+        if (position == 0)
             holder.et_value.addTextChangedListener(object : TextWatcher {
                 override fun afterTextChanged(s: Editable?) {
                     if (holder.title.text.equals(currencyKey))
-                        currencyConverterAdapterListener.isUpdatingText(false)
+                        if (s.toString().length <= 0) {
+                            currencyConverterAdapterListener.valueChanged(0.0)
+                        }
+                    currencyConverterAdapterListener.isUpdatingText(false)
                 }
 
                 override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
@@ -75,7 +78,7 @@ class CurrencyConverterRecyclerAdapter(
 
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                     val tempValue = s.toString()
-                    if ( holder.title.text.equals(currencyKey) && tempValue.toDoubleOrNull() != null) {
+                    if (holder.title.text.equals(currencyKey) && tempValue.toDoubleOrNull() != null) {
 
                         currencyConverterAdapterListener.isUpdatingText(true)
                         var temp = s.toString()
@@ -92,7 +95,8 @@ class CurrencyConverterRecyclerAdapter(
 
     private fun checkEditTextEnablement(position: Int, holder: CurrencyItemViewHolder) {
         if (position != 0) {
-            currenciesList.get(position).value = getValueAfterConversion(currentValue,currencyRateMapping,currenciesList.get(position).name).toString()
+            currenciesList.get(position).value =
+                getValueAfterConversion(currentValue, currencyRateMapping, currenciesList.get(position).name).toString()
             holder.et_value.isEnabled = false
         } else {
             currenciesList.get(position).value = currentValue.toString()
@@ -127,7 +131,7 @@ class CurrencyConverterRecyclerAdapter(
         currencyKey = currenciesList.get(position).name
         currenciesList.add(0, currenciesList.get(position))
         currenciesList.removeAt(position + 1)
-        notifyItemMoved(position,0)
+        notifyItemMoved(position, 0)
         notifyItemChanged(0)
         notifyItemChanged(1)
 
@@ -141,7 +145,7 @@ class CurrencyConverterRecyclerAdapter(
 
     class CurrencyItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         var title = itemView.title_tv
-        var currencyDescriptionTv  = itemView.currency_desc_tv
+        var currencyDescriptionTv = itemView.currency_desc_tv
         var et_value = itemView.et_value
         var flagIconIv = itemView.flag_icon
     }
@@ -159,12 +163,12 @@ class CurrencyConverterRecyclerAdapter(
         value: Double?,
         arrayList: ArrayList<CurrencyRatesRecyclerObject>
     ) {
-        if(value!=null)
+        if (value != null)
             currentValue = value
         else
             currentValue = 0.0
 
-        notifyItemRangeChanged(1,arrayList.size)
+        notifyItemRangeChanged(1, arrayList.size)
     }
 
 
