@@ -17,7 +17,7 @@ open class BaseViewModel : ViewModel() {
         if (error != null && error.message != null)
             errorMessage.value = error.message
         else
-            errorMessage.value = "Error Occured"
+            errorMessage.value = "Error Occured , Please try again later ..."
     }
 
 

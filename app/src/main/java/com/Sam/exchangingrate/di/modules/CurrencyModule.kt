@@ -1,7 +1,6 @@
 package com.Sam.exchangingrate.di.modules
 
 import com.Sam.exchangingrate.network.RestApi
-import com.Sam.exchangingrate.viewmodels.CurrencyConverterViewModel
 import com.Sam.exchangingrate.repository.CurrencyRepository
 import dagger.Module
 import dagger.Provides
